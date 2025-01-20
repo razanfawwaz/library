@@ -14,6 +14,7 @@ public class BookService {
     private BookRepository bookRepository;
 
     public Book addBook(BookBean bookBean){
+        // check validation
         Book book = new Book();
         book.setTitle(bookBean.getTitle());
         book.setAuthor(bookBean.getAuthor());
@@ -22,11 +23,18 @@ public class BookService {
     }
 
     public List<Book> getAllBooks(){
+        if (bookRepository.findAll().isEmpty()){
+            throw new RuntimeException("No books found");
+        }
+
         return bookRepository.findAll();
     }
 
     public Book getBookById(Long id){
-        return bookRepository.findById(id).orElse(null);
+       if (isBookExists(id)){
+           return bookRepository.findById(id).get();
+       }
+         throw new RuntimeException("Book not found");
     }
 
     public Book updateBook(Long id, BookBean bookBean){
@@ -37,12 +45,20 @@ public class BookService {
             book.setQuantity(bookBean.getQuantity());
             return bookRepository.save(book);
         }
-        return null;
+        throw new RuntimeException("Book not found");
     }
 
-    public void deleteBook(Long id){
-        bookRepository.deleteById(id);
+    public String deleteBook(Long id){
+        if(isBookExists(id)){
+            bookRepository.deleteById(id);
+            return "Book deleted successfully";
+        }
+
+        throw new RuntimeException("Book not found");
+    }
+
+    private boolean isBookExists(Long id){
+        return bookRepository.findById(id).isPresent();
     }
 
 }
-
